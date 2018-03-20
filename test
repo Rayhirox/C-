@@ -1,0 +1,78 @@
+const int MAXN = 1e3 + 5,
+	LMT = 20;
+
+int Dpt[MAXN], Ast[MAXN][LMT];
+
+struct Vtx {
+	Vtx *Next;
+	int To;
+
+	Vtx(void) : Next(NULL) {}
+	Vtx(int To) : Next(NULL), To(To) {}
+};
+
+struct VtxHead : Vtx {
+	Vtx *Head;
+
+	void operator += (int To)
+	{
+		if (Head)
+			Next = Next->Next = new Vtx(To);
+		else 
+			Head = Next = new Vtx(To);
+	}
+
+	VtxHead(void) : Head(NULL) {}
+} Graph[MAXN];
+
+void Search(int x)
+{
+	for (Vtx *i = Graph[x].Head;
+		i; i = i->Next)
+		if (Dpt[i->To] == 0) {
+			Dpt[i->To] = Dpt[x] + 1;
+			Ast[i->To][0] = x;
+
+			Search(x);
+		}
+}
+
+inline void Init(int x) // x 鏄牴鑺傜偣鐨勶紱
+{
+	Dpt[x] = 1;
+	Search(x);
+
+	for (int l = 1; (1 << l) <= n; ++l)
+		for (int i = 1; i <= n; ++i)
+			Ast[i][l] = Ast[
+				Ast[i][l - 1]
+			][l - 1];
+	/*
+i 鐨?2^3 鏄?
+	i 鐨?2^2 鍊嶇鍏堢殑 2^2 鍊嶇鍏堛€?
+	*/
+}
+
+int Lca(int x, int y)
+{
+	if (Dpt[x] < Dpt[y])
+		swap(x, y);
+
+	int k = 0;
+	while ((1 << k) < Dpt[x]) ++k;
+	// 浣垮緱 2^k >= Dpt[x]
+
+	for (int i = k; i >= 0; --i)
+		if (Dpt[x] - (1 << i) >= Dpt[y])
+			x = Ast[x][i];
+
+	if (x == y) return x;
+
+	for (int i = k; i >= 0; --i)
+		if (Ast[x][i] != Ast[y][i]) {
+			x = Ast[x][i];
+			y = Ast[y][i];
+		}
+	
+	return Ast[x][0];
+}
